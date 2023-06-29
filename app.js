@@ -1,5 +1,6 @@
 const express=require("express");
 const bodyParser=require("body-parser");
+const mongoose=require("mongoose");
 const date=require(__dirname+"/date.js");
 const port=3000;
 const app=express();
@@ -8,6 +9,15 @@ app.use(bodyParser.urlencoded({extended:true}));
 app.use(express.static("public"));
 var items=["buy rice","cook rice","eat rice  "];
 let workItems=[];
+
+mongoose.connect("mongodb://0.0.0.0:27017/todoListDB",{useNewUrlParser:true})
+
+const itemSchema= mongoose.Schema{
+    name:String
+};
+
+const itemModel=mongoose.Model("itemModel",itemSchema);
+
 
 app.get('/',(req,res)=>{
     let day=date.getDate();
