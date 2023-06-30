@@ -17,52 +17,109 @@ const itemSchema= mongoose.Schema({
 });
 
 const itemModel=mongoose.model("itemModel",itemSchema);
+const workitemModel=mongoose.model("workitemModel",itemSchema);
 
 const item1=new itemModel({
-    name:"haircut"
+    name:"subarthin"
 });
 const item2=new itemModel({
-    name:"sleep"
+    name:"loves"
 });
 const item3=new itemModel({
-    name:"facewash"
+    name:"webdev"
 });
 
 const defaultitems=[item1,item2,item3]
 
-itemModel.insertMany(defaultitems).then(function(data){
-    console.log("yes");
-}).catch(function(err){
-    console.log(err);
-});
+
+
+// itemModel.find().then(function(data){
+//     console.log(data);
+// }).then(function(err){
+//     console.log(err);
+// });
+
 
 app.get('/',(req,res)=>{
     let day=date.getDate();
-    res.render("list",{listTitle:"today",newListItems:items});
+    itemModel.find().then(function(data){
+        if(data.length===0){
+            itemModel.insertMany(defaultitems).then(function(data){
+                console.log("yes");
+                res.redirect('/');
+            }).catch(function(err){
+                console.log(err);
+            });
+        }else{
+        res.render("list",{listTitle:day,newListItems:data});
+        }
+    }).then(function(err){
+        console.log(err);
+    });
+    
 });
 
 app.post("/", function(req, res) {
-    let item=req.body.newItem;
+    let itemName=req.body.newItem;
+    
     if(req.body.list==="Work"){ 
-        workItems.push(item);
+        const witem=new workitemModel({
+            name:itemName
+        });
+        witem.save();
         res.redirect("/work");
     }else{
-    items.push(item);}
-    res.redirect("/");
+        const item=new itemModel({
+            name:itemName
+        });
+        item.save();}
+        res.redirect("/");
+});
+
+app.post("/delete",function(req,res){
+    const checkedItem=req.body.checkbox;
+    if(req.body.list==="Work"){ 
+        workitemModel.findByIdAndRemoove(checkedItem).then(function(data){
+            console.log("removed");
+        }).catch(function(err){
+            console.log(err);
+        })
+        res.redirect("/work");
+    }else{
+        itemModel.findByIdAndRemove(checkedItem).then(function(data){
+            console.log("removed");
+        }).catch(function(err){
+            console.log(err);
+        })
+        res.redirect("/");
+    }
 });
 
 app.get("/work",(req,res)=>{
-    res.render("list",{listTitle:"Work",newListItems: workItems})
-})
+    workitemModel.find().then(function(data){
+        if(data.length===0){
+            workitemModel.insertMany(defaultitems).then(function(data){
+                console.log("yes");
+                res.redirect('/');
+            }).catch(function(err){
+                console.log(err);
+            });
+        }else{
+        res.render("list",{listTitle:"Work",newListItems:data});
+        }
+    }).then(function(err){
+        console.log(err);
+    });
+});
 
 app.post("/work",(req,res)=>{
     
     res.redirect("/work");
-})
+});
 
 app.get("/about",(req,res)=>{
     res.render("about");
-})
+});
 app.listen(port,()=>{
     console.log("Server running at port 3000");
-})
+});
